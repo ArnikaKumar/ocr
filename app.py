@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request
-import requests
 import json
   
 app = Flask(__name__) 
@@ -14,7 +13,7 @@ def getDetails():
     img = request.files['pic']
     lang = request.form['lang']
     payload = {'isOverlayRequired': False, 'apikey': 'b7c4ae2c5b88957', 'url':img, 'language': lang}
-    r = requests.post('https://api.ocr.space/parse/image', data=payload)
+    r = request.post('https://api.ocr.space/parse/image', data=payload)
     content = json.loads(r.content.decode())
     print(content)
     text = content['ParsedResults'][0]['ParsedText']
