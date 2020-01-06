@@ -1,0 +1,116 @@
+{% block body %}
+
+<style>
+    #showImg img{
+        width: 300px;
+        height: 500px;
+    }
+</style>
+
+<link rel="shortcut icon" href="#">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<label>Upload Receipt:</label>
+
+ <form id="form" enctype="multipart/form-data">
+     <input type="file" name="pic" accept="image/*" id="inputFileToLoad">  
+     <select name="lang" id="lang">
+         <option value="eng">English</option>
+         <option value="fre">French</option>
+         <option value="ger" selected>German</option>
+         <option value="gre">Greek</option>
+         <option value="spa">Spanish</option>
+     </select>
+     <input type="button" value="Submit" id="submit">
+</form> 
+
+
+<table>
+    <tr>
+        <td>
+            <div id="showImg"></div>
+        </td>
+        <td>
+            <b><label>Merchant Name: </label><label id="name"></label></b><br/>
+            <b><label>Total: </label><label id="total"></label></b>
+            <div id="showAllDetails"></div>
+        </td>
+    </tr>
+</table>
+
+
+<script>
+    
+    $("#inputFileToLoad").change(function () {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                var img = $('<img>').attr('src', e.target.result);
+                $('#showImg').html(img);
+            };
+
+        reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    
+    function getNum(str){
+        return str.replace(/\s+/g,' ').trim().split(" ").pop();
+    }
+    var textArray;
+    
+    $("#submit").click(function(){
+        var formData = new FormData();
+        formData.append("file", $("#inputFileToLoad")[0].files[0]);
+        formData.append("language", $("#lang").val());
+        formData.append("apikey", "b7c4ae2c5b88957");
+        formData.append("isOverlayRequired", false);
+        formData.append("isTable", true);
+
+        $.ajax({
+            type : 'POST',
+            url : "https://api.ocr.space/parse/image",
+            data : formData,
+            processData: false,
+            contentType: false,
+            success: function(response){
+                console.log(response)
+                text = response['ParsedResults'][0]['ParsedText']
+                textArray = response['ParsedResults'][0]['ParsedText'].split(/\n/)
+                console.log(textArray)
+                text = text.replace(/\n/g, "<br />");
+                //$('#showAllDetails').html(text);
+                $("#name").html(textArray[0])
+                                
+                totArray = []
+                for (i = 1; i < textArray.length; i++){
+                    var totalStr = ["total", "ttl", "summe","μεριηο", "συνολο"];
+                    for (k = 0; k < totalStr.length ; k++) {
+                        if (textArray[i].toLowerCase().indexOf(totalStr[k]) != -1) {
+                            newArray = textArray[i].split(" ")
+                            for (j = 0; j < newArray.length; j++){
+                                if(/\d/.test(newArray[j])){
+                                    totArray.push(getNum(newArray[j]))
+                                }
+                                else if(/\d/.test(textArray[i+1])){
+                                    totArray.push(getNum(textArray[i+1]))
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                console.log(totArray)
+                var amt = totArray.reduce(function (a, b) { return a.length > b.length ? a : b; });
+                $("#total").html(amt);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    });
+</script>
+
+{% endblock %}
