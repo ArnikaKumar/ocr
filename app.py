@@ -15,10 +15,9 @@ def getDetails():
     payload = {'isOverlayRequired': False, 'apikey': 'b7c4ae2c5b88957', 'url':img, 'language': lang}
     r = request.post('https://api.ocr.space/parse/image', data=payload)
     content = json.loads(r.content.decode())
-    print(content)
     text = content['ParsedResults'][0]['ParsedText']
     return text
   
 if __name__ == '__main__': 
-    app.run(debug=True) 
-#    app.run(threaded=True, port=5000)
+    #app.run(debug=True) 
+    app.run(threaded=True, port=5000)
